@@ -55,10 +55,9 @@ pub fn isoreg(x: &[f64], y: &[f64]) -> IsoReg {
 
     let mut nu = y.clone();
 
-    let k = nu.len();
-    let mut w: Vec<usize> = Vec::with_capacity(k);
-    w.resize(k, 1);
-    let mut j = k - 1;
+    let mut w: Vec<usize> = Vec::with_capacity(n);
+    w.resize(n, 1);
+    let mut j = n - 1;
     loop {
         while j > 0 && nu[j - 1] <= nu[j] {
             j -= 1;
