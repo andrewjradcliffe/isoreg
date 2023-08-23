@@ -42,7 +42,7 @@ impl IsoReg {
     }
 }
 
-pub fn isoreg(x: &[f64], y: &[f64]) -> IsoReg {
+pub fn isoreg_rtol(x: &[f64], y: &[f64]) -> IsoReg {
     // These two necessary conditions could be handled more delicately.
     let n = y.len();
     assert_eq!(x.len(), n);
@@ -91,16 +91,72 @@ pub fn isoreg(x: &[f64], y: &[f64]) -> IsoReg {
     }
 }
 
+pub fn isoreg_ltor(x: &[f64], y: &[f64]) -> IsoReg {
+    // These two necessary conditions could be handled more delicately.
+    let n = y.len();
+    assert_eq!(x.len(), n);
+    assert!(n > 1);
+
+    // N.B. The possibility of duplicates are not dealt with.
+    let mut z: Vec<_> = x.iter().cloned().zip(y.iter().cloned()).collect();
+    z.sort_unstable_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
+    let (x, y): (Vec<_>, Vec<_>) = z.into_iter().unzip();
+
+    let mut nu: Vec<f64> = Vec::with_capacity(n);
+    nu.push(y[0]);
+    let mut w: Vec<usize> = Vec::with_capacity(n);
+    w.push(1);
+    let mut j: usize = 0;
+    let mut i: usize = 1;
+    while i < n {
+        j += 1;
+        nu.push(y[i]);
+        w.push(1);
+        i += 1;
+        while j > 0 && nu[j - 1] > nu[j] {
+            let w_prime = w[j - 1] + w[j];
+            let nu_prime = (w[j - 1] as f64 * nu[j - 1] + w[j] as f64 * nu[j]) / w_prime as f64;
+            nu[j - 1] = nu_prime;
+            w[j - 1] = w_prime;
+            nu.swap_remove(j);
+            w.swap_remove(j);
+            j -= 1;
+        }
+    }
+    let mut nu_out = y;
+    let mut pos: usize = 0;
+    let m = j + 1;
+    j = 0;
+    while j < m {
+        let mu = nu[j];
+        for _ in 0..w[j] {
+            nu_out[pos] = mu;
+            pos += 1
+        }
+        j += 1;
+    }
+    IsoReg { x, mu: nu_out }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn isoreg_works_1() {
+    fn isoreg_rtol_works_1() {
         let x = [0.0_f64, 2.0_f64, 4.0_f64];
         let y = [0.0_f64, 4.0_f64, 16.0_f64];
 
-        let iso = isoreg(&x, &y);
+        let iso = isoreg_rtol(&x, &y);
+        assert_eq!(iso.interpolate(3.0), 10.0);
+    }
+
+    #[test]
+    fn isoreg_ltor_works_1() {
+        let x = [0.0_f64, 2.0_f64, 4.0_f64];
+        let y = [0.0_f64, 4.0_f64, 16.0_f64];
+
+        let iso = isoreg_rtol(&x, &y);
         assert_eq!(iso.interpolate(3.0), 10.0);
     }
 }
