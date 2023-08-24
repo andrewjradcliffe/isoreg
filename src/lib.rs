@@ -1,4 +1,11 @@
 #[derive(Debug)]
+pub enum Direction {
+    Increasing,
+    Decreasing,
+}
+use self::Direction::*;
+
+#[derive(Debug)]
 pub struct IsoReg {
     x: Vec<f64>,
     mu: Vec<f64>,
@@ -42,14 +49,14 @@ impl IsoReg {
     }
 }
 
-pub fn isoreg_rtol(x: &[f64], y: &[f64]) -> IsoReg {
+pub fn isoreg_rtol(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
     // These two necessary conditions could be handled more delicately.
     let n = y.len();
     assert_eq!(x.len(), n);
     assert!(n > 1);
 
     // N.B. The possibility of duplicates are not dealt with.
-    let mut z: Vec<_> = x.iter().cloned().zip(y.iter().cloned()).collect();
+    let mut z: Vec<_> = x.into_iter().zip(y.into_iter()).collect();
     z.sort_unstable_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
     let (x, y): (Vec<_>, Vec<_>) = z.into_iter().unzip();
 
@@ -91,14 +98,15 @@ pub fn isoreg_rtol(x: &[f64], y: &[f64]) -> IsoReg {
     }
 }
 
-pub fn isoreg_ltor(x: &[f64], y: &[f64]) -> IsoReg {
+pub fn isoreg_ltor(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
     // These two necessary conditions could be handled more delicately.
     let n = y.len();
     assert_eq!(x.len(), n);
     assert!(n > 1);
 
     // N.B. The possibility of duplicates are not dealt with.
-    let mut z: Vec<_> = x.iter().cloned().zip(y.iter().cloned()).collect();
+    // let mut z: Vec<_> = x.iter().cloned().zip(y.iter().cloned()).collect();
+    let mut z: Vec<_> = x.into_iter().zip(y.into_iter()).collect();
     z.sort_unstable_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
     let (x, y): (Vec<_>, Vec<_>) = z.into_iter().unzip();
 
@@ -136,6 +144,22 @@ pub fn isoreg_ltor(x: &[f64], y: &[f64]) -> IsoReg {
         j += 1;
     }
     IsoReg { x, mu: nu_out }
+}
+
+pub fn isoreg(x: &[f64], y: &[f64], direction: Direction) -> IsoReg {
+    let x = x.iter().cloned().collect();
+    match direction {
+        Increasing => {
+            let y = y.iter().cloned().collect();
+            isoreg_ltor(x, y)
+        }
+        Decreasing => {
+            let y: Vec<_> = y.iter().cloned().map(|y_i| -y_i).collect();
+            let mut iso = isoreg_ltor(x, y);
+            iso.mu.iter_mut().for_each(|mu_i| *mu_i = -*mu_i);
+            iso
+        }
+    }
 }
 
 #[cfg(test)]
