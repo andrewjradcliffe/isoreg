@@ -311,4 +311,121 @@ mod tests {
         let iso = isoreg(&x, &y, Direction::Decreasing);
         assert_eq!(iso.mu(), &mu);
     }
+
+    #[test]
+    fn weighted_dup_works() {
+        let x: Vec<f64> = vec![1.0, 2.0, 2.0, 3.0, 3.0, 3.0, 4.0];
+        let y: Vec<f64> = x.iter().cloned().map(|y_i| 10.0 * y_i).collect();
+        let (z, v, w) = weighted_dup(&x, &y);
+        assert_eq!(z, vec![1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(v, vec![10.0, 20.0, 30.0, 40.0]);
+        assert_eq!(w, vec![1, 2, 3, 1]);
+
+        let y: Vec<f64> = vec![5.5, 3.5, 4.5, 1.0, 2.0, 3.0, 6.0];
+        let (z, v, w) = weighted_dup(&x, &y);
+        assert_eq!(z, vec![1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(v, vec![5.5, 4.0, 2.0, 6.0]);
+        assert_eq!(w, vec![1, 2, 3, 1]);
+
+        let x: Vec<f64> = vec![1.0, 2.0, 2.0, 3.0, 3.0, 3.0];
+        let y: Vec<f64> = x.iter().cloned().map(|y_i| 10.0 * y_i).collect();
+        let (z, v, w) = weighted_dup(&x, &y);
+        assert_eq!(z, vec![1.0, 2.0, 3.0]);
+        assert_eq!(v, vec![10.0, 20.0, 30.0]);
+        assert_eq!(w, vec![1, 2, 3]);
+
+        let x: Vec<f64> = vec![2.0, 2.0, 2.0, 2.0, 2.0];
+        let y: Vec<f64> = x.iter().cloned().map(|y_i| 10.0 * y_i).collect();
+        let (z, v, w) = weighted_dup(&x, &y);
+        assert_eq!(z, vec![2.0]);
+        assert_eq!(v, vec![20.0]);
+        assert_eq!(w, vec![5]);
+
+        let x: Vec<f64> = vec![1.0];
+        let y: Vec<f64> = vec![55.0];
+        let (z, v, w) = weighted_dup(&x, &y);
+        assert_eq!(z, vec![1.0]);
+        assert_eq!(v, vec![55.0]);
+        assert_eq!(w, vec![1]);
+
+        let x: Vec<f64> = vec![];
+        let y: Vec<f64> = vec![];
+        let (z, v, w) = weighted_dup(&x, &y);
+        assert_eq!(z, vec![]);
+        assert_eq!(v, vec![]);
+        assert_eq!(w, vec![]);
+    }
+
+    #[test]
+    fn isoreg_with_dup_works_vikings_1() {
+        let (x, mut y) = vikings_data();
+        let mu: Vec<f64> = vec![
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -0.5,
+            -0.5,
+            -0.5,
+            -0.5,
+            -0.4,
+            -0.4,
+            -0.4,
+            -0.4,
+            -0.4,
+            0.0,
+        ];
+
+        y.iter_mut().for_each(|y_i| *y_i = -*y_i);
+        let iso = isoreg_with_dup(x, y);
+        assert_eq!(iso.mu(), &mu);
+    }
+
+    #[test]
+    fn isoreg_with_dup_works_vikings_2() {
+        let (x, mut y) = vikings_data();
+        let z: Vec<f64> = vec![
+            22.0, 24.0, 26.0, 28.0, 29.0, 34.0, 36.0, 37.0, 39.0, 40.0, 42.0, 43.0, 45.0, 47.0,
+            48.0, 52.0, 56.0,
+        ];
+        let mu: Vec<f64> = vec![
+            1.0,
+            1.0,
+            1.0,
+            13.0 / 14.0,
+            13.0 / 14.0,
+            13.0 / 14.0,
+            13.0 / 14.0,
+            13.0 / 14.0,
+            13.0 / 14.0,
+            13.0 / 14.0,
+            0.5,
+            0.5,
+            0.5,
+            0.4,
+            0.4,
+            0.4,
+            0.0,
+        ];
+
+        y.iter_mut().for_each(|y_i| *y_i = -*y_i);
+        let iso = isoreg_with_dup(x, y);
+        for (z_i, mu_i) in z.into_iter().zip(mu.into_iter()) {
+            assert_eq!(-iso.interpolate(z_i), mu_i);
+        }
+    }
 }
