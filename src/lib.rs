@@ -146,6 +146,83 @@ pub fn isoreg_ltor(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
     IsoReg { x, mu: nu_out }
 }
 
+// This assumes that `x` is sorted and that the permutation which sorts `x`
+// has also been applied to `y`.
+fn weighted_dup(x: &[f64], y: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<usize>) {
+    let n = y.len();
+    assert_eq!(x.len(), n);
+    let mut z: Vec<f64> = Vec::with_capacity(n);
+    let mut v: Vec<f64> = Vec::with_capacity(n);
+    let mut w: Vec<usize> = Vec::with_capacity(n);
+    let mut i: usize = 0;
+    while i < n {
+        let a = x[i];
+        let mut b = y[i];
+        let mut c: usize = 1;
+        i += 1;
+        while i < n && x[i] == a {
+            b += y[i];
+            c += 1;
+            i += 1;
+        }
+        z.push(a);
+        v.push(b / c as f64);
+        w.push(c);
+    }
+    (z, v, w)
+}
+
+pub fn isoreg_with_dup(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
+    // These two necessary conditions could be handled more delicately.
+    let n = y.len();
+    assert_eq!(x.len(), n);
+    assert!(n > 1);
+
+    // N.B. The possibility of duplicates are not dealt with.
+    // let mut z: Vec<_> = x.iter().cloned().zip(y.iter().cloned()).collect();
+    let mut z: Vec<_> = x.into_iter().zip(y.into_iter()).collect();
+    z.sort_unstable_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
+    let (x, y): (Vec<_>, Vec<_>) = z.into_iter().unzip();
+
+    let (z, v, omega) = weighted_dup(&x, &y);
+    let n = z.len();
+
+    let mut nu: Vec<f64> = Vec::with_capacity(n);
+    nu.push(v[0]);
+    let mut w: Vec<usize> = Vec::with_capacity(n);
+    w.push(omega[0]);
+    let mut j: usize = 0;
+    let mut i: usize = 1;
+    while i < n {
+        j += 1;
+        nu.push(v[i]);
+        w.push(omega[i]);
+        i += 1;
+        while j > 0 && nu[j - 1] > nu[j] {
+            let w_prime = w[j - 1] + w[j];
+            let nu_prime = (w[j - 1] as f64 * nu[j - 1] + w[j] as f64 * nu[j]) / w_prime as f64;
+            nu[j - 1] = nu_prime;
+            w[j - 1] = w_prime;
+            nu.swap_remove(j);
+            w.swap_remove(j);
+            j -= 1;
+        }
+    }
+    let mut nu_out = y;
+    let mut pos: usize = 0;
+    let m = j + 1;
+    j = 0;
+    while j < m {
+        let mu = nu[j];
+        for _ in 0..w[j] {
+            nu_out[pos] = mu;
+            pos += 1
+        }
+        j += 1;
+    }
+    IsoReg { x, mu: nu_out }
+}
+
 pub fn isoreg(x: &[f64], y: &[f64], direction: Direction) -> IsoReg {
     let x = x.iter().cloned().collect();
     match direction {
