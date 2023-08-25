@@ -117,7 +117,7 @@ pub fn isoreg_ltor(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
     let mut i: usize = 1;
     while i < n {
         j += 1;
-        // SAFETY: `i` is always less than `n`, hence, always a valid index.
+        // SAFETY: `i` is always less than `n`, the length of `y`, hence, always a valid index.
         nu.push(y[i]);
         w.push(1);
         i += 1;
@@ -135,36 +135,12 @@ pub fn isoreg_ltor(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
     }
     let mut nu_out = y;
     let mut pos: usize = 0;
-    // SAFETY: j is always the index of the last block, i.e. the last valid index
-    // on `nu` and `w`, the length of each of which is `m = j + 1`.
-    let m = j + 1;
-    j = 0;
-    while j < m {
-        // unsafe {
-        //     // SAFETY: `j` is always less than `m`, which is the length of both `nu` and `w`.
-        //     let mu = nu.get_unchecked(j).clone();
-        //     for _ in 0..w.get_unchecked(j).clone() {
-        //         // SAFETY: The maximum value of `pos` is 1 + ∑ⱼwⱼ = 1 + (n - 1) = n, but the
-        //         // last offset accessed is n - 1. Hence, all uses of `pos` are safe.
-        //         *nu_out.get_unchecked_mut(pos) = mu;
-        //         pos += 1
-        //     }
-        //     j += 1;
-        // }
-        let mu = nu[j];
-        for _ in 0..w[j] {
-            nu_out[pos] = mu;
-            pos += 1;
+    for (nu_j, w_j) in nu.into_iter().zip(w.into_iter()) {
+        for nu_out_pos in nu_out[pos..pos + w_j].iter_mut() {
+            *nu_out_pos = nu_j;
         }
-        j += 1;
+        pos += w_j;
     }
-    // nu_out.clear();
-    // for (nu_j, w_j) in nu.into_iter().zip(w.into_iter()) {
-    //     let mu = nu_j;
-    //     for _ in 0..w_j {
-    //         nu_out.push(mu);
-    //     }
-    // }
     IsoReg { x, mu: nu_out }
 }
 
@@ -243,36 +219,12 @@ pub fn isoreg_with_dup(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
     }
     let mut nu_out = v;
     let mut pos: usize = 0;
-    // SAFETY: j is always the index of the last block, i.e. the last valid index
-    // on `nu`, `w` and `u`, the length of each of which is `m = j + 1`.
-    let m = j + 1;
-    j = 0;
-    while j < m {
-        // unsafe {
-        //     // SAFETY: `j` is always less than `m`, which is the length of both `nu` and `w`.
-        //     let mu = nu.get_unchecked(j).clone();
-        //     for _ in 0..u.get_unchecked(j).clone() {
-        //         // SAFETY: The maximum value of `pos` is 1 + ∑ⱼuⱼ = 1 + (n - 1) = n, but the
-        //         // last offset accessed is n - 1. Hence, all uses of `pos` are safe.
-        //         *nu_out.get_unchecked_mut(pos) = mu;
-        //         pos += 1;
-        //     }
-        //     j += 1;
-        // }
-        let mu = nu[j];
-        for _ in 0..u[j] {
-            nu_out[pos] = mu;
-            pos += 1;
+    for (nu_j, u_j) in nu.into_iter().zip(u.into_iter()) {
+        for nu_out_pos in nu_out[pos..pos + u_j].iter_mut() {
+            *nu_out_pos = nu_j;
         }
-        j += 1;
+        pos += u_j;
     }
-    // nu_out.clear();
-    // for (nu_j, u_j) in nu.into_iter().zip(u.into_iter()) {
-    //     let mu = nu_j;
-    //     for _ in 0..u_j {
-    //         nu_out.push(mu);
-    //     }
-    // }
     IsoReg { x: z, mu: nu_out }
 }
 
