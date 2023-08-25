@@ -118,9 +118,12 @@ pub fn isoreg_ltor(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
     let mut i: usize = 1;
     while i < n {
         j += 1;
+        // SAFETY: `i` is always less than `n`, hence, always a valid index.
         nu.push(y[i]);
         w.push(1);
         i += 1;
+        // SAFETY: `j` is always the index of the last block, and when `j = 0`,
+        // neither the second conditional nor loop body are executed.
         while j > 0 && nu[j - 1] > nu[j] {
             let w_prime = w[j - 1] + w[j];
             let nu_prime = (w[j - 1] as f64 * nu[j - 1] + w[j] as f64 * nu[j]) / w_prime as f64;
@@ -133,13 +136,26 @@ pub fn isoreg_ltor(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
     }
     let mut nu_out = y;
     let mut pos: usize = 0;
+    // SAFETY: j is always the index of the last block, i.e. the last valid index
+    // on `nu` and `w`, the length of each of which is `m = j + 1`.
     let m = j + 1;
     j = 0;
     while j < m {
+        // unsafe {
+        //     // SAFETY: `j` is always less than `m`, which is the length of both `nu` and `w`.
+        //     let mu = nu.get_unchecked(j).clone();
+        //     for _ in 0..w.get_unchecked(j).clone() {
+        //         // SAFETY: The maximum value of `pos` is 1 + ∑ⱼwⱼ = 1 + (n - 1) = n, but the
+        //         // last offset accessed is n - 1. Hence, all uses of `pos` are safe.
+        //         *nu_out.get_unchecked_mut(pos) = mu;
+        //         pos += 1
+        //     }
+        //     j += 1;
+        // }
         let mu = nu[j];
         for _ in 0..w[j] {
             nu_out[pos] = mu;
-            pos += 1
+            pos += 1;
         }
         j += 1;
     }
@@ -162,6 +178,7 @@ fn weighted_dup(x: &[f64], y: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<usize>) {
     let mut v: Vec<f64> = Vec::with_capacity(n);
     let mut w: Vec<usize> = Vec::with_capacity(n);
     let mut i: usize = 0;
+    // SAFETY: `i` is always in-bounds as both `y` and `x` are the same length.
     while i < n {
         let a = x[i];
         let mut b = y[i];
@@ -176,6 +193,9 @@ fn weighted_dup(x: &[f64], y: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<usize>) {
         v.push(b / c as f64);
         w.push(c);
     }
+    // z.shrink_to_fit();
+    // v.shrink_to_fit();
+    // w.shrink_to_fit();
     (z, v, w)
 }
 
@@ -203,10 +223,13 @@ pub fn isoreg_with_dup(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
     let mut i: usize = 1;
     while i < n {
         j += 1;
+        // SAFETY: `i` is always less than `n`, hence, always a valid index.
         nu.push(v[i]);
         w.push(omega[i]);
         u.push(1);
         i += 1;
+        // SAFETY: `j` is always the index of the last block, and when `j = 0`,
+        // neither the second conditional nor loop body are executed.
         while j > 0 && nu[j - 1] > nu[j] {
             let w_prime = w[j - 1] + w[j];
             let nu_prime = (w[j - 1] as f64 * nu[j - 1] + w[j] as f64 * nu[j]) / w_prime as f64;
@@ -221,9 +244,22 @@ pub fn isoreg_with_dup(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
     }
     let mut nu_out = v;
     let mut pos: usize = 0;
+    // SAFETY: j is always the index of the last block, i.e. the last valid index
+    // on `nu`, `w` and `u`, the length of each of which is `m = j + 1`.
     let m = j + 1;
     j = 0;
     while j < m {
+        // unsafe {
+        //     // SAFETY: `j` is always less than `m`, which is the length of both `nu` and `w`.
+        //     let mu = nu.get_unchecked(j).clone();
+        //     for _ in 0..u.get_unchecked(j).clone() {
+        //         // SAFETY: The maximum value of `pos` is 1 + ∑ⱼuⱼ = 1 + (n - 1) = n, but the
+        //         // last offset accessed is n - 1. Hence, all uses of `pos` are safe.
+        //         *nu_out.get_unchecked_mut(pos) = mu;
+        //         pos += 1;
+        //     }
+        //     j += 1;
+        // }
         let mu = nu[j];
         for _ in 0..u[j] {
             nu_out[pos] = mu;
