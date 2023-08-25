@@ -143,6 +143,13 @@ pub fn isoreg_ltor(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
         }
         j += 1;
     }
+    // nu_out.clear();
+    // for (nu_j, w_j) in nu.into_iter().zip(w.into_iter()) {
+    //     let mu = nu_j;
+    //     for _ in 0..w_j {
+    //         nu_out.push(mu);
+    //     }
+    // }
     IsoReg { x, mu: nu_out }
 }
 
@@ -213,16 +220,24 @@ pub fn isoreg_with_dup(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
         }
     }
     let mut nu_out = v;
-    nu_out.clear();
+    let mut pos: usize = 0;
     let m = j + 1;
     j = 0;
     while j < m {
         let mu = nu[j];
         for _ in 0..u[j] {
-            nu_out.push(mu);
+            nu_out[pos] = mu;
+            pos += 1;
         }
         j += 1;
     }
+    // nu_out.clear();
+    // for (nu_j, u_j) in nu.into_iter().zip(u.into_iter()) {
+    //     let mu = nu_j;
+    //     for _ in 0..u_j {
+    //         nu_out.push(mu);
+    //     }
+    // }
     IsoReg { x: z, mu: nu_out }
 }
 
