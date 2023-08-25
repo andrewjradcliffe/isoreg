@@ -178,8 +178,6 @@ pub fn isoreg_with_dup(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
     assert_eq!(x.len(), n);
     assert!(n > 1);
 
-    // N.B. The possibility of duplicates are not dealt with.
-    // let mut z: Vec<_> = x.iter().cloned().zip(y.iter().cloned()).collect();
     let mut z: Vec<_> = x.into_iter().zip(y.into_iter()).collect();
     z.sort_unstable_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
     let (x, y): (Vec<_>, Vec<_>) = z.into_iter().unzip();
