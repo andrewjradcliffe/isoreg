@@ -411,7 +411,7 @@ mod tests {
     }
 
     #[test]
-    fn isoreg_with_dup_works_vikings_1() {
+    fn isoreg_with_dup_works_vikings() {
         let (x, mut y) = vikings_data();
         let z: Vec<f64> = vec![
             22.0, 24.0, 26.0, 28.0, 29.0, 34.0, 36.0, 37.0, 39.0, 40.0, 42.0, 43.0, 45.0, 47.0,
@@ -483,6 +483,13 @@ mod tests {
         for (x_i, mu_i) in x.iter().zip(mu.iter()) {
             assert_eq!(iso.interpolate(*x_i), *mu_i);
         }
+    }
+    #[test]
+    fn isoreg_with_dup_works() {
+        let x: Vec<f64> = vec![1.0, 1.0, 1.0];
+        let y: Vec<f64> = vec![1.0, 2.0, 3.0];
+        let iso = isoreg_with_dup(x, y);
+        assert_eq!(iso.interpolate(1.0), 2.0);
     }
 
     #[test]
