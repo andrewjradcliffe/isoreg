@@ -185,40 +185,45 @@ pub fn isoreg_with_dup(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
     let (z, v, omega) = weighted_dup(&x, &y);
     let n = z.len();
 
-    let mut nu: Vec<f64> = Vec::with_capacity(n);
+    let mut nu = y;
+    nu.clear();
     nu.push(v[0]);
     let mut w: Vec<usize> = Vec::with_capacity(n);
     w.push(omega[0]);
+    let mut u: Vec<usize> = Vec::with_capacity(n);
+    u.push(1);
     let mut j: usize = 0;
     let mut i: usize = 1;
     while i < n {
         j += 1;
         nu.push(v[i]);
         w.push(omega[i]);
+        u.push(1);
         i += 1;
         while j > 0 && nu[j - 1] > nu[j] {
             let w_prime = w[j - 1] + w[j];
             let nu_prime = (w[j - 1] as f64 * nu[j - 1] + w[j] as f64 * nu[j]) / w_prime as f64;
             nu[j - 1] = nu_prime;
             w[j - 1] = w_prime;
+            u[j - 1] += u[j];
             nu.pop();
             w.pop();
+            u.pop();
             j -= 1;
         }
     }
-    let mut nu_out = y;
-    let mut pos: usize = 0;
+    let mut nu_out = v;
+    nu_out.clear();
     let m = j + 1;
     j = 0;
     while j < m {
         let mu = nu[j];
-        for _ in 0..w[j] {
-            nu_out[pos] = mu;
-            pos += 1
+        for _ in 0..u[j] {
+            nu_out.push(mu);
         }
         j += 1;
     }
-    IsoReg { x, mu: nu_out }
+    IsoReg { x: z, mu: nu_out }
 }
 
 pub fn isoreg(x: &[f64], y: &[f64], direction: Direction) -> IsoReg {
@@ -357,45 +362,6 @@ mod tests {
     #[test]
     fn isoreg_with_dup_works_vikings_1() {
         let (x, mut y) = vikings_data();
-        let mu: Vec<f64> = vec![
-            -1.0,
-            -1.0,
-            -1.0,
-            -1.0,
-            -13.0 / 14.0,
-            -13.0 / 14.0,
-            -13.0 / 14.0,
-            -13.0 / 14.0,
-            -13.0 / 14.0,
-            -13.0 / 14.0,
-            -13.0 / 14.0,
-            -13.0 / 14.0,
-            -13.0 / 14.0,
-            -13.0 / 14.0,
-            -13.0 / 14.0,
-            -13.0 / 14.0,
-            -13.0 / 14.0,
-            -13.0 / 14.0,
-            -0.5,
-            -0.5,
-            -0.5,
-            -0.5,
-            -0.4,
-            -0.4,
-            -0.4,
-            -0.4,
-            -0.4,
-            0.0,
-        ];
-
-        y.iter_mut().for_each(|y_i| *y_i = -*y_i);
-        let iso = isoreg_with_dup(x, y);
-        assert_eq!(iso.mu(), &mu);
-    }
-
-    #[test]
-    fn isoreg_with_dup_works_vikings_2() {
-        let (x, mut y) = vikings_data();
         let z: Vec<f64> = vec![
             22.0, 24.0, 26.0, 28.0, 29.0, 34.0, 36.0, 37.0, 39.0, 40.0, 42.0, 43.0, 45.0, 47.0,
             48.0, 52.0, 56.0,
@@ -422,12 +388,50 @@ mod tests {
 
         y.iter_mut().for_each(|y_i| *y_i = -*y_i);
         let iso = isoreg_with_dup(x, y);
-        for (z_i, mu_i) in z.into_iter().zip(mu.into_iter()) {
-            assert_eq!(-iso.interpolate(z_i), mu_i);
+
+        assert_eq!(iso.mu(), &mu.iter().map(|mu_i| -*mu_i).collect::<Vec<_>>());
+        for (z_i, mu_i) in z.iter().zip(mu.iter()) {
+            assert_eq!(-iso.interpolate(*z_i), *mu_i);
         }
         assert_eq!(-iso.interpolate(28.5), 13.0 / 14.0);
         assert_eq!(-iso.interpolate(41.0), ((13.0 / 14.0) + 0.5) / 2.0);
         assert_eq!(-iso.interpolate(53.0), -(-0.4 + (0.4 / 4.0) * 1.0));
+
+        let (mut x, _) = vikings_data();
+        x.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
+        let mu: Vec<f64> = vec![
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -13.0 / 14.0,
+            -0.5,
+            -0.5,
+            -0.5,
+            -0.5,
+            -0.4,
+            -0.4,
+            -0.4,
+            -0.4,
+            -0.4,
+            0.0,
+        ];
+        for (x_i, mu_i) in x.iter().zip(mu.iter()) {
+            assert_eq!(iso.interpolate(*x_i), *mu_i);
+        }
     }
 
     #[test]
