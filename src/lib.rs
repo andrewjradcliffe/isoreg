@@ -126,8 +126,8 @@ pub fn isoreg_ltor(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
             let nu_prime = (w[j - 1] as f64 * nu[j - 1] + w[j] as f64 * nu[j]) / w_prime as f64;
             nu[j - 1] = nu_prime;
             w[j - 1] = w_prime;
-            nu.swap_remove(j);
-            w.swap_remove(j);
+            nu.pop();
+            w.pop();
             j -= 1;
         }
     }
@@ -203,8 +203,8 @@ pub fn isoreg_with_dup(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
             let nu_prime = (w[j - 1] as f64 * nu[j - 1] + w[j] as f64 * nu[j]) / w_prime as f64;
             nu[j - 1] = nu_prime;
             w[j - 1] = w_prime;
-            nu.swap_remove(j);
-            w.swap_remove(j);
+            nu.pop();
+            w.pop();
             j -= 1;
         }
     }
