@@ -62,8 +62,7 @@ pub fn isoreg_rtol(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
 
     let mut nu = y.clone();
 
-    let mut w: Vec<usize> = Vec::with_capacity(n);
-    w.resize(n, 1);
+    let mut w: Vec<usize> = vec![1; n];
     let mut j = n - 1;
     loop {
         while j > 0 && nu[j - 1] <= nu[j] {
