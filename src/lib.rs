@@ -574,24 +574,20 @@ pub fn online_isoreg_with_dup(x: Vec<f64>, y: Vec<f64>) -> OnlineIsoReg {
             j -= 1;
         }
     }
-    let mut mu_out: Vec<f64> = Vec::with_capacity(n);
-    // let mut pos: usize = 0;
-    let m = j + 1;
-    j = 0;
-    while j < m {
-        let mu = nu[j];
-        for _ in 0..u[j] {
-            // nu_out[pos] = mu;
-            // pos += 1
-            mu_out.push(mu);
+    let mut mu: Vec<f64> = y;
+    mu.truncate(n);
+    let mut pos: usize = 0;
+    for (nu_j, u_j) in nu.iter().zip(u.iter()) {
+        for mu_pos in mu[pos..pos + *u_j].iter_mut() {
+            *mu_pos = *nu_j;
         }
-        j += 1;
+        pos += *u_j;
     }
     OnlineIsoReg {
         z,
         v,
         omega,
-        mu: mu_out,
+        mu,
         nu,
         w,
         u,
@@ -688,15 +684,13 @@ impl OnlineIsoReg {
                 j -= 1;
             }
         }
-        self.mu.clear();
-        let m = j + 1;
-        j = 0;
-        while j < m {
-            let mu = self.nu[j];
-            for _ in 0..self.u[j] {
-                self.mu.push(mu);
+        self.mu.resize(n, 0.0);
+        let mut pos: usize = 0;
+        for (nu_j, u_j) in self.nu.iter().zip(self.u.iter()) {
+            for mu_pos in self.mu[pos..pos + *u_j].iter_mut() {
+                *mu_pos = *nu_j;
             }
-            j += 1;
+            pos += u_j;
         }
     }
 }
