@@ -427,5 +427,8 @@ mod tests {
         for (z_i, mu_i) in z.into_iter().zip(mu.into_iter()) {
             assert_eq!(-iso.interpolate(z_i), mu_i);
         }
+        assert_eq!(-iso.interpolate(28.5), 13.0 / 14.0);
+        assert_eq!(-iso.interpolate(41.0), ((13.0 / 14.0) + 0.5) / 2.0);
+        assert_eq!(-iso.interpolate(53.0), -(-0.4 + (0.4 / 4.0) * 1.0));
     }
 }
