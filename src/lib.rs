@@ -133,15 +133,15 @@ pub fn isoreg_ltor(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
             j -= 1;
         }
     }
-    let mut nu_out = y;
+    let mut mu = y;
     let mut pos: usize = 0;
     for (nu_j, w_j) in nu.into_iter().zip(w.into_iter()) {
-        for nu_out_pos in nu_out[pos..pos + w_j].iter_mut() {
-            *nu_out_pos = nu_j;
+        for mu_pos in mu[pos..pos + w_j].iter_mut() {
+            *mu_pos = nu_j;
         }
         pos += w_j;
     }
-    IsoReg { x, mu: nu_out }
+    IsoReg { x, mu }
 }
 
 // This assumes that `x` is sorted and that the permutation which sorts `x`
@@ -217,15 +217,15 @@ pub fn isoreg_with_dup(x: Vec<f64>, y: Vec<f64>) -> IsoReg {
             j -= 1;
         }
     }
-    let mut nu_out = v;
+    let mut mu = v;
     let mut pos: usize = 0;
     for (nu_j, u_j) in nu.into_iter().zip(u.into_iter()) {
-        for nu_out_pos in nu_out[pos..pos + u_j].iter_mut() {
-            *nu_out_pos = nu_j;
+        for mu_pos in mu[pos..pos + u_j].iter_mut() {
+            *mu_pos = nu_j;
         }
         pos += u_j;
     }
-    IsoReg { x: z, mu: nu_out }
+    IsoReg { x: z, mu }
 }
 
 pub fn isoreg(x: &[f64], y: &[f64], direction: Direction) -> IsoReg {
